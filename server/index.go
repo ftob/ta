@@ -19,7 +19,7 @@ func (h *indexHandler) router() chi.Router {
 
 	r.Get("/", h.sayHello)
 
-	r.Method("GET", "/docs", http.StripPrefix("/booking/v1/docs", http.FileServer(http.Dir("index/docs"))))
+	r.Method("GET", "/docs", http.StripPrefix("/v1/docs", http.FileServer(http.Dir("index/docs"))))
 
 	return r
 }
