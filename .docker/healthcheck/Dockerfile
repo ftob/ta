@@ -1,3 +1,3 @@
 FROM aelsabbahy/goss:onbuild
 
-CMD ["serve"]
+CMD ["serve", "--format", "json"]

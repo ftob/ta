@@ -31,9 +31,9 @@ func (h *indexHandler) sayHello(w http.ResponseWriter, r *http.Request) {
 	message, _ := h.s.SayHello()
 
 	var response = struct {
-		Message []byte `json:"message"`
+		Message string `json:"message"`
 	}{
-		Message: message,
+		Message: string(message),
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
