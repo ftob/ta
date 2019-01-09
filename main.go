@@ -25,22 +25,23 @@ const (
 	componentType = "backend"
 )
 
+// PCHP - program code of a healthy person
 func main() {
 
 	startTime := time.Now()
 
 	var (
-		addr     = envString("PORT", defaultPort)
+		addr     = envString("APP_PORT", defaultPort)
 		httpAddr = flag.String("http.addr", ":"+addr, "HTTP listen address")
 		ctx = context.Background()
 	)
 
 	flag.Parse()
 
-	ctx = context.WithValue(ctx, "ServiceID", envString("VERSION", defaultVersion))
-	ctx = context.WithValue(ctx, "Version", envString("VERSION", serviceID))
-	ctx = context.WithValue(ctx, "ComponentId", envString("VERSION", componentID))
-	ctx = context.WithValue(ctx, "ComponentType", envString("VERSION", componentType))
+	ctx = context.WithValue(ctx, "ServiceID", envString("APP_SERVICE_ID", defaultVersion))
+	ctx = context.WithValue(ctx, "Version", envString("APP_VERSION", serviceID))
+	ctx = context.WithValue(ctx, "ComponentId", envString("APP_COMPONENT_ID", componentID))
+	ctx = context.WithValue(ctx, "ComponentType", envString("APP_COMPONENT_TYPE", componentType))
 	ctx = context.WithValue(ctx, "startTime", startTime)
 
 
