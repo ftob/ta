@@ -6,4 +6,4 @@ http:
     allow-insecure: true
     no-follow-redirects: true # Setting this to true will NOT follow redirects
     timeout: 1000
-    body: [] # Check http response content for these patterns
+    body: '{message: "Hello world"' # Check http response content for these patterns
