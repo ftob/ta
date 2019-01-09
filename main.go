@@ -54,7 +54,7 @@ func main() {
 
 	var ix index.Service
 	ix = index.NewService()
-	ix = index.NewLoggingService(log.With(logger, "component", "booking"), ix)
+	ix = index.NewLoggingService(log.With(logger, "component", "index"), ix)
 	ix = index.NewInstrumentingService(
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 			Namespace: "api",
