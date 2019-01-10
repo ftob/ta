@@ -1,0 +1,9 @@
+http:
+  http://app:8080:
+    # required attributes
+    status: 200
+    # optional attributes
+    allow-insecure: true
+    no-follow-redirects: true # Setting this to true will NOT follow redirects
+    timeout: 1000
+    body: ["/Hello world/"] # Check http response content for these patterns

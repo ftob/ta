@@ -3,21 +3,21 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"github.com/ftob/ta/index"
+	"github.com/ftob/ta/health"
 	"github.com/go-chi/chi"
 	kitlog "github.com/go-kit/kit/log"
 	"net/http"
 )
-
-type indexHandler struct {
-	s      index.Service
+type healthHandler struct {
+	s health.Service
 	logger kitlog.Logger
 }
 
-func (h *indexHandler) router() chi.Router {
+
+func (h *healthHandler) router() chi.Router {
 	r := chi.NewRouter()
 
-	r.Get("/", h.sayHello)
+	r.Get("/health", h.health)
 
 	r.Method("GET", "/docs", http.StripPrefix("/v1/docs", http.FileServer(http.Dir("index/docs"))))
 
@@ -25,18 +25,12 @@ func (h *indexHandler) router() chi.Router {
 }
 
 
-func (h *indexHandler) sayHello(w http.ResponseWriter, r *http.Request) {
+func (h *healthHandler) health(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
-	message, _ := h.s.SayHello()
+	response := h.s.Health()
 
-	var response = struct {
-		Message string `json:"message"`
-	}{
-		Message: string(message),
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/health+json; charset=utf-8")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		_ = h.logger.Log("error", err)
 		encodeError(ctx, err, w)

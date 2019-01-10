@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"github.com/ftob/ta/health"
 	"github.com/ftob/ta/index"
 	"github.com/go-chi/chi"
 	kitlog "github.com/go-kit/kit/log"
@@ -13,16 +14,17 @@ import (
 // Server holds the dependencies for a HTTP server.
 type Server struct {
 	Index  index.Service
-
+	Health	health.Service
 	Logger kitlog.Logger
 
 	router chi.Router
 }
 
 // New returns a new HTTP server.
-func New(ix index.Service, logger kitlog.Logger) *Server {
+func New(ix index.Service, hlt health.Service, logger kitlog.Logger) *Server {
 	s := &Server{
 		Index:  ix,
+		Health: hlt,
 		Logger:   logger,
 	}
 
@@ -34,6 +36,12 @@ func New(ix index.Service, logger kitlog.Logger) *Server {
 		h := indexHandler{s.Index, s.Logger}
 		r.Mount("/", h.router())
 	})
+
+	r.Route("/service/", func(r chi.Router) {
+		h := healthHandler{s.Health, s.Logger}
+		r.Mount("/v1", h.router())
+	})
+
 
 	r.Method("GET", "/metrics", promhttp.Handler())
 
@@ -67,7 +75,7 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"error": err.Error(),
 	})
 }

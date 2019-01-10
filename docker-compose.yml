@@ -1,0 +1,25 @@
+version: '3'
+services:
+  app:
+    build: .
+    stdin_open: true
+    tty: true
+    networks:
+      - backend
+    environment:
+      ENV APP_PORT: 8080
+      ENV APP_SERVICE_ID: say_hello
+      ENV APP_VERSION: 0.1.0
+      ENV APP_COMPONENT_ID: http_say_hello
+      ENV APP_COMPONENT_TYPE: backend
+  healthcheck:
+    build: .docker/healthcheck
+    stdin_open: true
+    tty: true
+    ports:
+      - 8080:8080
+    networks:
+      - backend
+networks:
+  backend:
+

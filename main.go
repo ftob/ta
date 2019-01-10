@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"github.com/ftob/ta/health"
 	"github.com/ftob/ta/index"
 	"github.com/ftob/ta/server"
 	"github.com/go-kit/kit/log"
@@ -12,20 +14,37 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 const (
 	defaultPort = "8080"
+	defaultVersion = "0.1.0"
+	serviceID = "say_hello"
+	componentID = "http_say_hello"
+	componentType = "backend"
 )
 
+// PCHP - program code of a healthy person
 func main() {
 
+	startTime := time.Now()
+
 	var (
-		addr     = envString("PORT", defaultPort)
+		addr     = envString("APP_PORT", defaultPort)
 		httpAddr = flag.String("http.addr", ":"+addr, "HTTP listen address")
+		ctx = context.Background()
 	)
 
 	flag.Parse()
+
+	ctx = context.WithValue(ctx, "ServiceID", envString("APP_SERVICE_ID", defaultVersion))
+	ctx = context.WithValue(ctx, "Version", envString("APP_VERSION", serviceID))
+	ctx = context.WithValue(ctx, "ComponentId", envString("APP_COMPONENT_ID", componentID))
+	ctx = context.WithValue(ctx, "ComponentType", envString("APP_COMPONENT_TYPE", componentType))
+	ctx = context.WithValue(ctx, "startTime", startTime)
+
+
 
 	var logger log.Logger
 	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
@@ -35,7 +54,7 @@ func main() {
 
 	var ix index.Service
 	ix = index.NewService()
-	ix = index.NewLoggingService(log.With(logger, "component", "booking"), ix)
+	ix = index.NewLoggingService(log.With(logger, "component", "index"), ix)
 	ix = index.NewInstrumentingService(
 		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 			Namespace: "api",
@@ -52,7 +71,11 @@ func main() {
 		ix,
 	)
 
-	srv := server.New(ix, log.With(logger, "component", "http"))
+	var hlth health.Service
+	hlth = health.NewService(ctx)
+
+	// Create http server
+	srv := server.New(ix, hlth, log.With(logger, "component", "http"))
 
 	errs := make(chan error, 2)
 	go func() {
