@@ -6,6 +6,8 @@ services:
     tty: true
     networks:
       - backend
+    ports:
+      - 8080:8080
     environment:
       ENV APP_PORT: 8080
       ENV APP_SERVICE_ID: say_hello
@@ -14,12 +16,17 @@ services:
       ENV APP_COMPONENT_TYPE: backend
   healthcheck:
     build: .docker/healthcheck
-    stdin_open: true
-    tty: true
-    ports:
-      - 8080:8080
     networks:
       - backend
+  prometheus:
+    build: .docker/prometheus
+    ports:
+      - 9090:9090
+  grafana:
+    image: grafana/grafana:5.1.0
+    ports:
+      - 3000:3000
+
 networks:
   backend:
 
