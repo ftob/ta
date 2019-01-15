@@ -1,5 +1,5 @@
 http:
-  http://app:8080:
+  http://{{ .Vars.host }}:8080:
     # required attributes
     status: 200
     # optional attributes
