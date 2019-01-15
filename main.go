@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/ftob/ta/health"
 	"github.com/ftob/ta/index"
+	"github.com/ftob/ta/notallow"
+	"github.com/ftob/ta/notfound"
 	"github.com/ftob/ta/server"
 	"github.com/go-kit/kit/log"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -18,11 +20,11 @@ import (
 )
 
 const (
-	defaultPort = "8080"
+	defaultPort    = "8080"
 	defaultVersion = "0.1.0"
-	serviceID = "say_hello"
-	componentID = "http_say_hello"
-	componentType = "backend"
+	serviceID      = "say_hello"
+	componentID    = "http_say_hello"
+	componentType  = "backend"
 )
 
 // PCHP - program code of a healthy person
@@ -33,7 +35,7 @@ func main() {
 	var (
 		addr     = envString("APP_PORT", defaultPort)
 		httpAddr = flag.String("http.addr", ":"+addr, "HTTP listen address")
-		ctx = context.Background()
+		ctx      = context.Background()
 	)
 
 	flag.Parse()
@@ -43,8 +45,6 @@ func main() {
 	ctx = context.WithValue(ctx, "ComponentId", envString("APP_COMPONENT_ID", componentID))
 	ctx = context.WithValue(ctx, "ComponentType", envString("APP_COMPONENT_TYPE", componentType))
 	ctx = context.WithValue(ctx, "startTime", startTime)
-
-
 
 	var logger log.Logger
 	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
@@ -71,11 +71,37 @@ func main() {
 		ix,
 	)
 
+	var nf notfound.Service
+	nf = notfound.NewService()
+	nf = notfound.NewLoggingService(log.With(logger, "component", "notfound"), nf)
+	nf = notfound.NewInstrumentingService(
+		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+			Namespace: "api",
+			Subsystem: "notfound_service",
+			Name:      "request_count",
+			Help:      "Number of 404 code requests received.",
+		}, fieldKeys),
+		nf,
+	)
+
+	var mna notallow.Service
+	mna = notallow.NewService()
+	mna = notallow.NewLoggingService(log.With(logger, "component", "notallow"), mna)
+	mna = notallow.NewInstrumentingService(
+		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+			Namespace: "api",
+			Subsystem: "notallow_service",
+			Name:      "request_count",
+			Help:      "Number of 405 code error requests received.",
+		}, fieldKeys),
+		mna,
+	)
+
 	var hlth health.Service
 	hlth = health.NewService(ctx)
 
 	// Create http server
-	srv := server.New(ix, hlth, log.With(logger, "component", "http"))
+	srv := server.New(ix, hlth, nf, mna, log.With(logger, "component", "http"))
 
 	errs := make(chan error, 2)
 	go func() {

@@ -1,4 +1,4 @@
-package index
+package notallow
 
 import (
 	"github.com/go-kit/kit/log"
@@ -14,14 +14,14 @@ func NewLoggingService(logger log.Logger, s Service) Service {
 	return &loggingService{logger, s}
 }
 
-func (s *loggingService) SayHello() (say []byte, err error) {
+func (s *loggingService) MethodNotAllow() (res []byte, err error) {
 	defer func(begin time.Time) {
 		s.logger.Log(
-			"method", "SayHello",
+			"method", "MethodNotAllow",
 			"took", time.Since(begin),
 			"err", err,
 		)
 	}(time.Now())
 
-	return s.next.SayHello()
+	return s.next.MethodNotAllow()
 }
