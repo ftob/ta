@@ -64,6 +64,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
 }
 
+
 func accessControl(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -78,18 +79,20 @@ func accessControl(h http.Handler) http.Handler {
 	})
 }
 
-func encodeError(ctx context.Context, err error, w http.ResponseWriter) {
+
+func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+	// add custom error
 	switch err {
 	case notallow.ErrorMethodNotAllow:
 		w.WriteHeader(http.StatusMethodNotAllowed)
-	// add custom error
 	case notfound.ErrorNotFound:
 		w.WriteHeader(http.StatusNotFound)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	ctx = json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"error": err.Error(),
 	})
 }

@@ -2,8 +2,8 @@ FROM grafana/grafana:latest
 
 USER root
 
-COPY ./etc/grafana/datasources /usr/share/grafana/conf/provisioning/datasources
-COPY ./etc/grafana/dashboards /usr/share/grafana/conf/provisioning/dashboards
+COPY ./etc/grafana/datasources /etc/grafana/provisioning/datasources
+COPY ./etc/grafana/dashboards /etc/grafana/provisioning/dashboards
 
 EXPOSE 3000
 
