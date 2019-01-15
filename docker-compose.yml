@@ -18,6 +18,8 @@ services:
     build: .docker/healthcheck
     networks:
       - backend
+    ports:
+      - 8081:8080
   prometheus:
     build: .docker/prometheus
     volumes:
