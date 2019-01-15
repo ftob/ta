@@ -27,4 +27,3 @@ func (s *instrumentingService) SayHello() (say []byte, err error) {
 
 	return s.next.SayHello()
 }
-

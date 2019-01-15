@@ -3,31 +3,29 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"github.com/ftob/ta/index"
+	"github.com/ftob/ta/notfound"
 	"github.com/go-chi/chi"
 	kitlog "github.com/go-kit/kit/log"
 	"net/http"
 )
 
-type indexHandler struct {
-	s      index.Service
+type notfoundHandler struct {
+	s      notfound.Service
 	logger kitlog.Logger
 }
 
-func (h *indexHandler) router() chi.Router {
+func (h *notfoundHandler) router() chi.Router {
 	r := chi.NewRouter()
 
-	r.Get("/", h.sayHello)
-
-	r.Method("GET", "/docs", http.StripPrefix("/v1/docs", http.FileServer(http.Dir("index/docs"))))
+	r.NotFound(h.notFound)
 
 	return r
 }
 
-func (h *indexHandler) sayHello(w http.ResponseWriter, r *http.Request) {
+func (h *notfoundHandler) notFound(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
-	message, _ := h.s.SayHello()
+	message, _ := h.s.NotFound()
 
 	var response = struct {
 		Message string `json:"message"`
@@ -35,6 +33,7 @@ func (h *indexHandler) sayHello(w http.ResponseWriter, r *http.Request) {
 		Message: string(message),
 	}
 
+	_ = h.logger.Log("code", 404, "addr", r.RemoteAddr)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		_ = h.logger.Log("error", err)

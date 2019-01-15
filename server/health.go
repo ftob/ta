@@ -8,11 +8,11 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 	"net/http"
 )
+
 type healthHandler struct {
-	s health.Service
+	s      health.Service
 	logger kitlog.Logger
 }
-
 
 func (h *healthHandler) router() chi.Router {
 	r := chi.NewRouter()
@@ -23,7 +23,6 @@ func (h *healthHandler) router() chi.Router {
 
 	return r
 }
-
 
 func (h *healthHandler) health(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()

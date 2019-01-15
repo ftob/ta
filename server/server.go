@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"github.com/ftob/ta/health"
 	"github.com/ftob/ta/index"
+	"github.com/ftob/ta/notallow"
+	"github.com/ftob/ta/notfound"
 	"github.com/go-chi/chi"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -13,18 +15,21 @@ import (
 
 // Server holds the dependencies for a HTTP server.
 type Server struct {
-	Index  index.Service
-	Health	health.Service
-	Logger kitlog.Logger
-
-	router chi.Router
+	Index    index.Service
+	Health   health.Service
+	Logger   kitlog.Logger
+	NotFound notfound.Service
+	NotAllow notallow.Service
+	router   chi.Router
 }
 
 // New returns a new HTTP server.
-func New(ix index.Service, hlt health.Service, logger kitlog.Logger) *Server {
+func New(ix index.Service, hlt health.Service, nf notfound.Service, mna notallow.Service, logger kitlog.Logger) *Server {
 	s := &Server{
-		Index:  ix,
-		Health: hlt,
+		Index:    ix,
+		Health:   hlt,
+		NotFound: nf,
+		NotAllow: mna,
 		Logger:   logger,
 	}
 
@@ -42,8 +47,13 @@ func New(ix index.Service, hlt health.Service, logger kitlog.Logger) *Server {
 		r.Mount("/v1", h.router())
 	})
 
-
 	r.Method("GET", "/metrics", promhttp.Handler())
+
+	nah := notallowHandler{s.NotAllow, s.Logger}
+	r.MethodNotAllowed(nah.methodNotAllow)
+
+	nfh := notfoundHandler{s.NotFound, s.Logger}
+	r.NotFound(nfh.notFound)
 
 	s.router = r
 
@@ -68,14 +78,18 @@ func accessControl(h http.Handler) http.Handler {
 	})
 }
 
-func encodeError(_ context.Context, err error, w http.ResponseWriter) {
+func encodeError(ctx context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	switch err {
+	case notallow.ErrorMethodNotAllow:
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	// add custom error
+	case notfound.ErrorNotFound:
+		w.WriteHeader(http.StatusNotFound)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+	ctx = json.NewEncoder(w).Encode(map[string]interface{}{
 		"error": err.Error(),
 	})
 }

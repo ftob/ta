@@ -90,11 +90,11 @@ func (s *service) Health() Status {
 	}
 
 	return Status{
-		Status:    status,
-		Version:   s.ctx.Value("Version").(string),
-		ReleaseID: s.ctx.Value("Version").(string),
-		Details: Details{avg, ram, up},
-		ServiceID: s.ctx.Value("ServiceID").(string),
+		Status:      status,
+		Version:     s.ctx.Value("Version").(string),
+		ReleaseID:   s.ctx.Value("Version").(string),
+		Details:     Details{avg, ram, up},
+		ServiceID:   s.ctx.Value("ServiceID").(string),
 		Description: "",
 	}
 
@@ -109,7 +109,7 @@ func (s *service) newUptime() Uptime {
 		MetricUnit:    "sec",
 		ComponentType: s.ctx.Value("ComponentType").(string),
 		ComponentId:   s.ctx.Value("ComponentId").(string),
-		Status: StatusPass,
+		Status:        StatusPass,
 	}
 }
 
@@ -144,7 +144,7 @@ func (s *service) newMemory() Memory {
 	} else if v.UsedPercent > 95 {
 		status = StatusFail
 	}
-	
+
 	return Memory{
 		Status:        status,
 		ComponentId:   s.ctx.Value("ComponentId").(string),
