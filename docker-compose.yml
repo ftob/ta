@@ -1,4 +1,4 @@
-version: '3'
+version: '3.5'
 services:
   app:
     build: .
@@ -9,24 +9,49 @@ services:
     ports:
       - 8080:8080
     environment:
-      ENV APP_PORT: 8080
-      ENV APP_SERVICE_ID: say_hello
-      ENV APP_VERSION: 0.1.0
-      ENV APP_COMPONENT_ID: http_say_hello
-      ENV APP_COMPONENT_TYPE: backend
+      - APP_PORT=8080
+      - APP_SERVICE_ID=say_hello
+      - APP_VERSION=0.1.0
+      - APP_COMPONENT_ID=http_say_hello
+      - APP_COMPONENT_TYPE=backend
   healthcheck:
     build: .docker/healthcheck
     networks:
       - backend
   prometheus:
     build: .docker/prometheus
+    volumes:
+      - .docker/prometheus/etc/prometheus:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention=1h'
+      - '--web.enable-lifecycle'
+    restart: "no"
     ports:
       - 9090:9090
+    networks:
+      - backend
   grafana:
-    image: grafana/grafana:5.1.0
+    build: .docker/grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: "no"
     ports:
       - 3000:3000
+    networks:
+      - backend
 
 networks:
   backend:
 
+volumes:
+  prometheus_data: {}
+  grafana_data: {}

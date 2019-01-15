@@ -1,5 +1,7 @@
-FROM prom/prometheus
+FROM prom/prometheus:latest
 
-COPY config.yml .
+VOLUME /etc/prometheus
 
-ENTRYPOINT [ "/bin/prometheus", "-config.file=config,yml" ]
+EXPOSE 9000
+
+ENTRYPOINT ["/bin/prometheus"]
