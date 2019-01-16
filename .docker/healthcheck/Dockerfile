@@ -1,3 +1,3 @@
 FROM aelsabbahy/goss:onbuild
 
-CMD ["serve", "--vars", "external.yaml", "--format", "json"]
+CMD ["serve", "--format", "json"]

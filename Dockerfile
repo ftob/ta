@@ -8,11 +8,8 @@ RUN go get -d -v ./...
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
 
 
-FROM alpine:3.4 as goss
-# Install Goss
-RUN apk add --no-cache --virtual=goss-dependencies curl ca-certificates && \
-    curl -fsSL https://goss.rocks/install | sh && \
-    apk del goss-dependencies
+ADD https://github.com/chrisaxiom/docker-health-check/archive/v0.3.tar.gz /
+RUN tar -xvzf /v0.3.tar.gz -C /
 
 FROM scratch
 
@@ -24,11 +21,9 @@ ENV APP_VERSION 0.1.0
 ENV APP_COMPONENT_ID http_say_hello
 ENV APP_COMPONENT_TYPE backend
 
+COPY --from=builder /docker-health-check-0.3/docker-health-check /docker-health-check
 COPY --from=builder /go/src/github.com/ftob/ta/app .
-COPY --from=goss /usr/local/bin/goss /usr/local/bin/goss
 
-ADD .docker/healthcheck/goss/goss.yaml /goss/goss.yaml
-
-HEALTHCHECK --interval=1s --timeout=6s CMD goss -g /goss/goss.yaml validate
+HEALTHCHECK --interval=8s --timeout=120s --retries=8 CMD ["/docker-health-check", "-url=http://localhost:8080/service/v1/health"]
 
 CMD ["./app"]
